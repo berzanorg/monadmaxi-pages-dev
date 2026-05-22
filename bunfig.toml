@@ -1,0 +1,5 @@
+[install]
+# Refuse to install any package version published less than 7 days ago.
+# Mitigates supply-chain attacks that publish a malicious patch and race to be installed
+# before the npm community can flag it.
+minimumReleaseAge = 604800

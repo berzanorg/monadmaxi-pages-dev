@@ -1,0 +1,573 @@
+@font-face {
+  font-family: "Inter";
+  src: url("./InterVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg: #0c0a1e;
+  --surface: #15122a;
+  --fg: #f5f3ff;
+  --muted: #a8a4b8;
+  --muted-warm: #7a738c;
+  --line: #26213d;
+  --line-strong: #3a3260;
+  --purple: #9b85ff;
+  --purple-hover: #b5a3ff;
+  --purple-soft: rgba(131, 110, 249, 0.20);
+  --shadow: 0 18px 50px -22px rgba(0, 0, 0, 0.75);
+
+  --radius-card: 22px;
+  --radius-pill: 999px;
+
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  min-height: 100%;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+}
+body {
+  background-color: var(--bg);
+  background-attachment: fixed;
+  background-image:
+    /* asymmetric color wash for depth — static, no animation */
+    linear-gradient(165deg,
+      rgba(110, 84, 255, 0.22) 0%,
+      rgba(76, 56, 219, 0.10) 35%,
+      rgba(12, 10, 30, 0) 70%);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-feature-settings: "ss01", "cv11";
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+/* Static square-dot grid. Tiled SVG so dots are crisp squares (not blurred
+   like CSS radial-gradients). Compositor-only, zero animation cost. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28'><rect x='13' y='13' width='2' height='2' fill='%23DDD7FE' fill-opacity='0.12'/></svg>");
+  background-repeat: repeat;
+}
+
+#app {
+  touch-action: pan-x pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding:
+    max(env(safe-area-inset-top), 32px)
+    20px
+    max(env(safe-area-inset-bottom), 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+@media (min-width: 720px) {
+  #app {
+    max-width: 460px;
+    padding-top: 56px;
+    gap: 26px;
+  }
+}
+
+/* ---------- Header ---------- */
+header { text-align: center; }
+header h1 {
+  margin: 0;
+  font-size: clamp(28px, 7vw, 36px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: #ffffff;
+}
+.tagline {
+  margin: 12px auto 0;
+  color: var(--muted);
+  font-size: 14.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  max-width: 32ch;
+}
+
+/* ---------- State container ---------- */
+.state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.state.hidden { display: none !important; }
+
+/* ---------- Square card surface (shared) ---------- */
+.drop,
+.stage,
+.error-card,
+.loader-card {
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* ---------- Dropzone ---------- */
+.drop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-align: center;
+  padding: 24px;
+  gap: 18px;
+  transition:
+    border-color 200ms ease,
+    background-color 200ms ease,
+    transform 80ms ease;
+}
+.drop:hover {
+  border-color: var(--purple);
+  background-color: var(--purple-soft);
+}
+.drop:active { transform: scale(0.997); }
+.drop input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+
+/* Faded placeholder photo: fade is baked into the JPEG itself, so no CSS
+   blend or opacity is needed. The placeholder covers the whole drop area. */
+.drop-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.drop-text {
+  position: relative;
+  z-index: 1;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  color: var(--fg);
+}
+
+/* ---------- Result stage ---------- */
+.stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Blurred cover fill — UI only, never baked into export. */
+.stage-bg-wrap {
+  position: absolute;
+  inset: -28px;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+.stage-bg-wrap.hidden { display: none !important; }
+#stage-bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: blur(22px) brightness(0.68) saturate(1.2);
+  transform: scale(1.08);
+}
+
+#stage {
+  touch-action: auto;
+}
+
+/* Native-aspect photo + lasers; letterbox shows stage-bg behind. */
+#result-canvas,
+#result-img {
+  position: relative;
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  z-index: 2;
+  background: transparent;
+}
+
+.stage.has-save-img #result-canvas {
+  display: none;
+}
+
+#result-img {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  -webkit-touch-callout: default;
+  -webkit-user-select: all !important;
+  user-select: all !important;
+  -webkit-user-drag: element;
+}
+#result-img.show {
+  display: block;
+}
+
+/* Invisible drag targets for repositioning each laser eye. The laser itself
+   is the only visible cue — the handle is just a hit area. `touch-action: none`
+   is scoped to the handle only so the rest of the page still scrolls/zooms. */
+.eye-handle {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 5;
+}
+.eye-handle.dragging,
+.eye-handle:active { cursor: grabbing; }
+
+/* ---------- Loader ---------- */
+.loader-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 32px;
+}
+.scanner {
+  position: relative;
+  width: 200px;
+  height: 140px;
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(110, 84, 255, 0.10), transparent 70%);
+}
+/* L-shaped corner brackets — face-detect viewfinder. */
+.scanner-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+}
+.scanner-corner.tl { top: 0; left: 0; border-top: 2px solid #DDD7FE; border-left: 2px solid #DDD7FE; border-top-left-radius: 6px; }
+.scanner-corner.tr { top: 0; right: 0; border-top: 2px solid #DDD7FE; border-right: 2px solid #DDD7FE; border-top-right-radius: 6px; }
+.scanner-corner.bl { bottom: 0; left: 0; border-bottom: 2px solid #DDD7FE; border-left: 2px solid #DDD7FE; border-bottom-left-radius: 6px; }
+.scanner-corner.br { bottom: 0; right: 0; border-bottom: 2px solid #DDD7FE; border-right: 2px solid #DDD7FE; border-bottom-right-radius: 6px; }
+
+.scanner-eye {
+  position: absolute;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  margin-top: -15px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 1.0) 0%,
+    rgba(221, 215, 254, 0.92) 14%,
+    rgba(180, 150, 255, 0.55) 42%,
+    rgba(110,  84, 255, 0.28) 72%,
+    rgba(110,  84, 255, 0) 100%);
+  filter: drop-shadow(0 0 8px rgba(155, 133, 255, 0.65));
+  animation: scannerPulse 1.6s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.scanner-eye-l { left: 46px; }
+.scanner-eye-r { right: 46px; animation-delay: 0.35s; }
+@keyframes scannerPulse {
+  0%, 100% { transform: scale(0.85); opacity: 0.55; }
+  50%      { transform: scale(1.18); opacity: 1; }
+}
+
+.scanner-line {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(to right,
+    rgba(221, 215, 254, 0) 0%,
+    rgba(221, 215, 254, 1) 50%,
+    rgba(221, 215, 254, 0) 100%);
+  box-shadow:
+    0 0 8px 1px rgba(221, 215, 254, 0.85),
+    0 0 24px 4px rgba(155, 133, 255, 0.55);
+  animation: scannerSweep 2s cubic-bezier(0.55, 0, 0.45, 1) infinite;
+  will-change: transform, opacity;
+}
+@keyframes scannerSweep {
+  0%   { transform: translateY(0);     opacity: 0; }
+  8%   { opacity: 1; }
+  50%  { transform: translateY(138px); opacity: 1; }
+  58%  { opacity: 0; }
+  100% { transform: translateY(0);     opacity: 0; }
+}
+
+.loader-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.012em;
+  text-align: center;
+}
+.loader-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--purple);
+  font-family: var(--mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-align: center;
+  opacity: 0.85;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scanner-eye, .scanner-line { animation: none; }
+}
+
+/* ---------- Error ---------- */
+.error-card {
+  border-color: #4a2a3a;
+  background: #251522;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+  gap: 14px;
+}
+.error-icon {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: #3a1f2c;
+  color: #ff9ab3;
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.error-text {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--fg);
+  line-height: 1.5;
+  max-width: 28ch;
+}
+
+/* ---------- Controls ---------- */
+.controls {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-self: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 360px;
+}
+.controls .btn { flex: 1 1 0; min-width: 0; }
+
+.btn {
+  appearance: none;
+  position: relative;
+  font: inherit;
+  font-family: inherit;
+  font-weight: 600;
+  border: 0;
+  padding: 14px 22px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  letter-spacing: -0.005em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  transform: translateZ(0);
+  transition:
+    background 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 220ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 200ms ease;
+}
+.btn.hidden { display: none; }
+.btn:disabled { cursor: not-allowed; }
+.btn:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 3px;
+}
+
+/* ----- Primary ----- */
+.btn.primary {
+  background:
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0) 50%),
+    var(--purple);
+  color: #0c0a1e;
+  font-size: 16px;
+  padding: 16px 22px;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.18) inset,
+    0 10px 26px -12px rgba(155, 133, 255, 0.65),
+    0 2px 6px -2px rgba(60, 30, 180, 0.25);
+}
+.btn.primary:hover:not(:disabled) {
+  background:
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0) 55%),
+    var(--purple-hover);
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.22) inset,
+    0 16px 38px -12px rgba(181, 163, 255, 0.75),
+    0 4px 12px -4px rgba(80, 50, 220, 0.30);
+}
+.btn.primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.10) inset,
+    0 4px 12px -8px rgba(155, 133, 255, 0.45);
+  transition-duration: 80ms;
+}
+.btn.primary:disabled {
+  background: #2a234d;
+  color: #6b5fa3;
+  box-shadow: none;
+}
+
+/* ----- Ghost ----- */
+.btn.ghost {
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--line-strong);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.03) inset,
+    0 2px 6px -3px rgba(0, 0, 0, 0.5);
+}
+.btn.ghost:hover:not(:disabled) {
+  background: linear-gradient(180deg,
+    rgba(155, 133, 255, 0.10) 0%,
+    rgba(155, 133, 255, 0.04) 100%),
+    var(--surface);
+  border-color: var(--purple);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 0 rgba(155, 133, 255, 0.18) inset,
+    0 10px 26px -14px rgba(155, 133, 255, 0.55),
+    0 2px 6px -3px rgba(0, 0, 0, 0.5);
+}
+.btn.ghost:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+  transition-duration: 80ms;
+}
+.btn.ghost:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+/* ---------- Status ---------- */
+.status {
+  margin: 0;
+  color: var(--muted-warm);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  min-height: 1.2em;
+  text-align: center;
+}
+
+/* ---------- Credit ---------- */
+.credit {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.credit a {
+  color: var(--purple);
+  text-decoration: none;
+  font-weight: 600;
+}
+.credit a:hover { text-decoration: underline; }
+
+/* Transient notice toast — shown briefly when local AI couldn't detect eyes
+   so the user knows the detection ran (and that it's truly local) before
+   they manually adjust. Animation is GPU-only (opacity + transform). */
+.notice {
+  position: fixed;
+  left: 50%;
+  top: calc(env(safe-area-inset-top) + 18px);
+  transform: translate(-50%, -16px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(21, 18, 42, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.6);
+  color: var(--fg);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 50;
+  transition: opacity 320ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.notice::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--purple);
+  box-shadow: 0 0 8px 1px var(--purple);
+}
+.notice.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}

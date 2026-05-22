@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <meta name="theme-color" content="#0c0a1e" />
+  <title>Monad Maxi PFP Maker</title>
+  <meta name="description" content="Purple laser eyes PFP maker by Berzan for Monad community." />
+  <meta property="og:title" content="Monad Maxi PFP Maker" />
+  <meta property="og:description" content="Purple laser eyes PFP maker by Berzan for Monad community." />
+  <meta property="og:image" content="/og.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@berzan" />
+  <meta name="twitter:creator" content="@berzan" />
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="icon" type="image/png" sizes="256x256" href="./favicon.png" />
+  <link rel="apple-touch-icon" href="./favicon.png" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main id="app">
+    <header>
+      <h1>Monad Maxi PFP Maker</h1>
+      <p class="tagline">Purple laser eyes for Monad community.</p>
+    </header>
+
+    <section id="loader" class="state loader hidden" aria-live="polite" aria-label="Scanning face">
+      <div class="loader-card">
+        <div class="scanner" aria-hidden="true">
+          <span class="scanner-corner tl"></span>
+          <span class="scanner-corner tr"></span>
+          <span class="scanner-corner bl"></span>
+          <span class="scanner-corner br"></span>
+          <div class="scanner-eye scanner-eye-l"></div>
+          <div class="scanner-eye scanner-eye-r"></div>
+          <div class="scanner-line"></div>
+        </div>
+        <div class="loader-text">Scanning face</div>
+        <div class="loader-sub">Using local AI</div>
+      </div>
+    </section>
+
+    <section id="dropzone" class="state empty" aria-label="Upload a photo">
+      <label class="drop">
+        <input id="file" type="file" accept="image/*" />
+        <img class="drop-photo" src="./placeholder.jpg" alt="" aria-hidden="true"
+             loading="eager" decoding="async" />
+        <div class="drop-text">Upload your PFP</div>
+      </label>
+    </section>
+
+    <section id="result" class="state result hidden" aria-label="Result">
+      <div class="stage" id="stage">
+        <div class="stage-bg-wrap hidden" aria-hidden="true">
+          <img id="stage-bg" alt="" />
+        </div>
+        <canvas id="result-canvas" aria-label="Your photo with monad maxi eyes"></canvas>
+        <img id="result-img" alt="" />
+        <div id="eye-left"  class="eye-handle" data-eye="left"  role="slider"
+             aria-label="Left laser position"></div>
+        <div id="eye-right" class="eye-handle" data-eye="right" role="slider"
+             aria-label="Right laser position"></div>
+      </div>
+    </section>
+
+    <section id="error" class="state error hidden" role="alert">
+      <div class="error-card">
+        <div class="error-icon" aria-hidden="true">!</div>
+        <div id="error-text" class="error-text"></div>
+      </div>
+    </section>
+
+    <footer class="controls">
+      <button id="replace" class="btn ghost" type="button" disabled>
+        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.7"/>
+          <path d="M12.5 2v3h-3"/>
+          <path d="M13.5 8a5.5 5.5 0 0 1-9.6 3.7"/>
+          <path d="M3.5 14v-3h3"/>
+        </svg>
+        <span>Replace</span>
+      </button>
+      <button id="save" class="btn primary" type="button" disabled>
+        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M8 2v8"/>
+          <path d="M4.5 6.5L8 10l3.5-3.5"/>
+          <path d="M3 12v1.5A.5.5 0 003.5 14h9a.5.5 0 00.5-.5V12"/>
+        </svg>
+        <span id="save-label">Share</span>
+      </button>
+    </footer>
+
+    <p id="status" class="status" aria-live="polite"></p>
+    <div id="notice" class="notice" role="status" aria-live="polite"></div>
+
+    <p class="credit">
+      Made by <a href="https://x.com/berzan" target="_blank" rel="noopener noreferrer">@berzan</a> for Monad community
+    </p>
+  </main>
+
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>
