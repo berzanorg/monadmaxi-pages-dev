@@ -221,10 +221,6 @@ header h1 {
   background: transparent;
 }
 
-.stage.has-save-img #result-canvas {
-  display: none;
-}
-
 #result-img {
   display: none;
   position: absolute;
