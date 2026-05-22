@@ -1,5 +1,7 @@
 # Monad Maxi PFP Maker
 
+[![Monad Maxi PFP Maker](assets/og.png)](https://monadmaxi.pages.dev)
+
 A web app that adds purple laser eyes to a PFP, built by
 [Berzan](https://x.com/berzan) for the Monad community. Detection and
 rendering both happen locally in the browser, so the photo is never uploaded
